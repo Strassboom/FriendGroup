@@ -60,7 +60,8 @@ app.post('/gate', async (request,response) => {
     if ('registerButton' in request.body) {
         info = { data : "" };
         // If Username and password are valid
-        if (request.body.username.length > 0) {
+        // Write Database code here
+        if (true) {
             info.data = 'Account created!'
             response.render('gate', info);
         }
@@ -73,6 +74,7 @@ app.post('/gate', async (request,response) => {
     // If logging in
     else if ('loginButton' in request.body) {
         // If Username\Password exists\is valid
+        // Write Database code here
         if (true) {
             response.redirect(301,'home')
         }
