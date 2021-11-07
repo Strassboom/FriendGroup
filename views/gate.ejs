@@ -1,0 +1,28 @@
+
+<!DOCTYPE html>
+<html>
+ 
+<head>
+    <title>Home Page</title>
+     
+    <style type="text/css" media="screen">
+        body {
+            background-color: skyblue;
+            text-decoration-color: white;
+            font-size:7em;
+        }
+    </style>
+</head>
+ 
+<body>
+    <center>This is our home page.</center>
+    <center><%= info.data %></center>
+    <form action="/gate" method="POST">
+        <input id="username" type="text" placeholder="Enter Username\Email Here">
+        <input id="password" type="password" placeholder="Enter Password Here">
+        <button id="loginButton" type="submit">Login</button>
+        <button id="registerButton" type="submit">Register</button>
+    </form>
+</body>
+ 
+</html>   
