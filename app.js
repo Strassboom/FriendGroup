@@ -60,7 +60,6 @@ app.post('/gate', async (request,response) => {
     if ('registerButton' in request.body) {
         info = { data : "" };
         // If Username and password are valid
-        console.log(request.body.username.length);
         if (request.body.username.length > 0) {
             info.data = 'Account created!'
             response.render('gate', info);
