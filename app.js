@@ -2,13 +2,25 @@
 const WebSocketServer = require('websocket').server;
 const http = require('http');
 const express = require('express');
-const cors = require('cors');
+var multer = require('multer');
+var upload = multer();
 const app = express();
 //const dbOperations = require('./lib/dbOperations');
 const Promise = require('bluebird');
 
 app.set('views', __dirname + '\\views');
 app.set('view engine', 'ejs');
+
+// for parsing application/json
+app.use(express.json()); 
+
+// for parsing application/xwww-
+app.use(express.urlencoded({ extended: true })); 
+//form-urlencoded
+
+// for parsing multipart/form-data
+app.use(upload.array()); 
+app.use(express.static('public'));
 
 app.get('/', async (request,response) => {
     //console.log(localStorage);
@@ -37,29 +49,30 @@ app.get('/', async (request,response) => {
 
 // Visiting the gateway page before submitting any account information or accessing the internal website
 app.get('/gate', async (request,response) => {
-    info = { data : "Please Log In or Register" };
+    info = { data : 'Please Log In or Register' };
     response.render('gate', info);
 });
 
 // Visiting the gateway page after subnmitting either registration information or login credentials
 app.post('/gate', async (request,response) => {
     // If registering
-    console.log(request);
-    if (true) {
+    console.log(request.body);
+    if ('registerButton' in request.body) {
         info = { data : "" };
         // If Username and password are valid
-        if (true) {
-            info.data = "Account created!"
+        console.log(request.body.username.length);
+        if (request.body.username.length > 0) {
+            info.data = 'Account created!'
             response.render('gate', info);
         }
         // If Username and password are NOT valid
         else if (true) {
-            info.data = "Account not created! Username\\Password invalid!"
+            info.data = 'Account not created! Username\\Password invalid!'
             response.render('gate', info);
         }
     }
     // If logging in
-    else if (true) {
+    else if ('loginButton' in request.body) {
         // If Username\Password exists\is valid
         if (true) {
             response.redirect(301,'home')
