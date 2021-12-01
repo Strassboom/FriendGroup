@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html>
+ 
+<head>
+    <title>Settings</title>
+     
+    <style type="text/css" media="screen">
+        body {
+            background-color: skyblue;
+            text-decoration-color: white;
+            font-size:7em;
+        }
+    </style>
+</head>
+ 
+<body>
+    <form action="/settings" method="POST">
+        <input name="profilePicture" id="profilePicture" type="image" placeholder="Profile Picture">
+        <input name="username" id="username" type="text" placeholder="Username"><br>
+        <label for="username" text="Username:"></label>
+        <input name="password" id="password" type="password" placeholder="Password"><br>
+        <label for="password" text="Password:"></label>
+        <input name="confirmPassword" id="confirmPassword" type="password" placeholder="Confirm Password"><br>
+        <label for="confirmPassword" text="Confirm Password:"></label>
+
+        <input name="email" id="email" type="text" placeholder="Email"><br>
+        <label for="email" text="Email:"></label>
+        <button name="SaveSettings" type="submit">Save Settings</button>
+    </form>
+</body>
+ 
+</html>   
