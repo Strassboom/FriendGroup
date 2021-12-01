@@ -5,8 +5,9 @@ const express = require('express');
 var multer = require('multer');
 var upload = multer();
 const app = express();
-//const dbOperations = require('./lib/dbOperations');
+const dbOperations = require('./lib/dbOperations');
 const Promise = require('bluebird');
+const moment = require('moment');
 
 app.set('views', __dirname + '\\views');
 app.set('view engine', 'ejs');
@@ -50,37 +51,76 @@ app.get('/', async (request,response) => {
 // Visiting the gateway page before submitting any account information or accessing the internal website
 app.get('/gate', async (request,response) => {
     info = { data : 'Please Log In or Register' };
-    response.render('gate', info);
+    response.render('gate', { data : info.data });
 });
 
-// Visiting the gateway page after subnmitting either registration information or login credentials
+// Visiting the gateway page after submitting either registration information or login credentials
 app.post('/gate', async (request,response) => {
+    const sequelizeInstance = require('./lib/sqlConnection');
+    const models = require('friendgroupmodels').models(sequelizeInstance);
+    const model = models['user'];
+    const info = { data : '' };
+    
     // If registering
-    console.log(request.body);
     if ('registerButton' in request.body) {
-        info = { data : "" };
+        const record = { email: request.body.email, password: request.body.password };
         // If Username and password are valid
+        const validRegister = await dbOperations.registerIsValid(record,model);
+        console.log(validRegister);
+
         // Write Database code here
-        if (true) {
+        if (validRegister) {
+            const dateTimeCreated = moment();
+            record.dateTimeCreated = dateTimeCreated.format();
+            record.id = `${request.hostname}-${dateTimeCreated.unix()}`;
+            record.username = record.email;
+            await dbOperations.sendData({ data: [record], model }).then(async function (sendResults) {
+                console.log(sendResults);    
+                if (sendResults.error) {
+                    console.log(sendResults.error, { sendResults })
+                    }
+                }).catch(async function (error) {
+                    console.log(error);
+                }
+            );
             info.data = 'Account created!'
-            response.render('gate', info);
+            response.render('gate', { data: info.data });
         }
+
         // If Username and password are NOT valid
-        else if (true) {
-            info.data = 'Account not created! Username\\Password invalid!'
-            response.render('gate', info);
+        else {
+            info.data = 'Account not created! Email or Password invalid!';
+            console.log(info.data);
+            response.render('gate', { data: info.data });
         }
+
     }
     // If logging in
     else if ('loginButton' in request.body) {
-        // If Username\Password exists\is valid
+        // If Email\Password exists and is valid
+        const record = { email: request.body.email, password: request.body.password };
+        const validLogin = await dbOperations.loginIsValid(record,model);
         // Write Database code here
-        if (true) {
-            response.redirect(301,'home')
+        if (validLogin) {
+            response.redirect(301,'home');
+        }
+        else {
+            info.data = 'Account not created! Email or Password invalid!';
+            response.render('gate', { data: info.data });
         }
     }
 });
 
+app.get('/home', async (request, response) => {
+    // If token is still valid
+    if (true) {
+        response.render('home', { data : 'Welcome home!' })
+    }
+    //If token is expired
+    else {
+        response.redirect(301,'gate');
+    }
+});
 
 const server = http.createServer(app);
 

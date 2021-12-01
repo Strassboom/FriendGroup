@@ -1,0 +1,27 @@
+
+<!DOCTYPE html>
+<html>
+ 
+<head>
+    <title>Home Page</title>
+     
+    <style type="text/css" media="screen">
+        body {
+            background-color: skyblue;
+            text-decoration-color: white;
+            font-size:7em;
+        }
+    </style>
+</head>
+ 
+<body>
+    <center>This is our home page.</center>
+    <center><%= data %></center>
+    <form action="/gate" method="POST">
+        <input name="writeContent" id="writecontent" type="text" placeholder="Write Content Here"><br>
+        <label for="writeContent" text="username"></label>
+        <button name="postContent" type="submit">Post Content</button>
+    </form>
+</body>
+ 
+</html>   
