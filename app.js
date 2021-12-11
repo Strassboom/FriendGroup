@@ -103,10 +103,11 @@ app.post('/gate', async (request,response) => {
     // If logging in
     else if ('loginButton' in request.body) {
         // If Email\Password exists and is valid
-        const record = { email: request.body.email, password: request.body.password };
+        const record = { email: request.body.email, username: request.body.email, password: request.body.password };
         const validLogin = await dbOperations.loginIsValid(record,model);
         // Write Database code here
         if (validLogin) {
+            record.username = await dbOperations.getUser({ data: record, model }).then((user) => { return user.username });
             const token = jwt.sign(record,
                 'secret'
             );
@@ -123,22 +124,9 @@ app.post('/gate', async (request,response) => {
 
 app.get('/home', tokenIsValid, async (request, response) => {
     // If token is still valid
-    // if (request.cookies.token) {
-    //     const decode = jwt.verify(request.cookies.token, 'secret', (err, decodedToken) => {
-    //         if (err) {
-    //             response.redirect(301,'gate');
-    //         }
-    //         else {
-    //             response.render('home', { data : `Welcome home, ${decodedToken.email}!` });
-    //         }
-    //     });
-    //     console.log(decode);
-    // }
-    // else {
-    //     response.redirect(301,'gate');
-    // }
     if (request.tokenIsValid) {
-        response.render('home', { data : `Welcome home!` });
+        const data = { message: `Welcome home, ${request.username}!`}
+        response.render('home', { data : data });
     }
     else{
         response.redirect(301,'/gate');
