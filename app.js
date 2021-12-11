@@ -6,8 +6,11 @@ var multer = require('multer');
 var upload = multer();
 const app = express();
 const dbOperations = require('./lib/dbOperations');
+const tokenIsValid = require('./middleware/tokenIsValid');
 const Promise = require('bluebird');
 const moment = require('moment');
+const jwt = require('jsonwebtoken');
+const cookieParser = require("cookie-parser");
 
 app.set('views', __dirname + '\\views');
 app.set('view engine', 'ejs');
@@ -18,6 +21,8 @@ app.use(express.json());
 // for parsing application/xwww-
 app.use(express.urlencoded({ extended: true })); 
 //form-urlencoded
+
+app.use(cookieParser());
 
 // for parsing multipart/form-data
 app.use(upload.array()); 
@@ -74,7 +79,7 @@ app.post('/gate', async (request,response) => {
             record.dateTimeCreated = dateTimeCreated.format();
             record.id = `${request.hostname}-${dateTimeCreated.unix()}`;
             record.username = record.email;
-            await dbOperations.sendData({ data: [record], model }).then(async function (sendResults) {
+            await dbOperations.createRecord({ data: record, model }).then(async function (sendResults) {
                 console.log(sendResults);    
                 if (sendResults.error) {
                     console.log(sendResults.error, { sendResults })
@@ -102,7 +107,11 @@ app.post('/gate', async (request,response) => {
         const validLogin = await dbOperations.loginIsValid(record,model);
         // Write Database code here
         if (validLogin) {
-            response.redirect(301,'home');
+            const token = jwt.sign(record,
+                'secret'
+            );
+            response.cookie('token', token);
+            response.redirect(301,`/home`);
         }
         else {
             info.data = 'Account not created! Email or Password invalid!';
@@ -111,13 +120,67 @@ app.post('/gate', async (request,response) => {
     }
 });
 
-app.get('/home', async (request, response) => {
+
+app.get('/home', tokenIsValid, async (request, response) => {
     // If token is still valid
-    if (true) {
-        response.render('home', { data : 'Welcome home!' })
+    // if (request.cookies.token) {
+    //     const decode = jwt.verify(request.cookies.token, 'secret', (err, decodedToken) => {
+    //         if (err) {
+    //             response.redirect(301,'gate');
+    //         }
+    //         else {
+    //             response.render('home', { data : `Welcome home, ${decodedToken.email}!` });
+    //         }
+    //     });
+    //     console.log(decode);
+    // }
+    // else {
+    //     response.redirect(301,'gate');
+    // }
+    if (request.tokenIsValid) {
+        response.render('home', { data : `Welcome home!` });
     }
-    //If token is expired
-    else {
+    else{
+        response.redirect(301,'/gate');
+    }
+});
+
+app.get('/settings', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        const sequelizeInstance = require('./lib/sqlConnection');
+        const models = require('friendgroupmodels').models(sequelizeInstance);
+        const model = models['user'];
+        const record = { email: request.email };
+        console.log(record);
+        const userData = await dbOperations.getUser({ data: record, model });
+        // response.redirect(301,'/settings');
+        response.render('settings', { data : `Welcome to Settings, ${userData.username}!` });
+    }
+    else{
+        response.redirect(301,'gate');
+    }
+});
+
+app.post('/settings', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        const sequelizeInstance = require('./lib/sqlConnection');
+        const models = require('friendgroupmodels').models(sequelizeInstance);
+        const model = models['user'];
+        const record = { email: request.body.email, username: request.body.username, password: request.body.password };
+        console.log(record);
+        await dbOperations.updateRecord({ currentEmail: request.email, data: record, model });
+        if (record.email == null || record.email.trim().length == 0) {
+            record.email = request.email;
+        }
+        const userData = await dbOperations.getUser({ data: record, model });
+        const token = jwt.sign(record,
+            'secret'
+        );
+        response.cookie('token', token);
+        // response.redirect(301,'/settings');
+        response.render('settings', { data : `Welcome to Settings, ${userData.username}!` });
+    }
+    else{
         response.redirect(301,'gate');
     }
 });
