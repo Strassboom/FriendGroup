@@ -8,6 +8,7 @@ module.exports = function tokenIsValid(request, response, next) {
             }
             else {
                 request.email = decodedToken.email;
+                request.username = decodedToken.username;
                 request.tokenIsValid = true;
             }
         });

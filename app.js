@@ -103,10 +103,11 @@ app.post('/gate', async (request,response) => {
     // If logging in
     else if ('loginButton' in request.body) {
         // If Email\Password exists and is valid
-        const record = { email: request.body.email, password: request.body.password };
+        const record = { email: request.body.email, username: request.body.email, password: request.body.password };
         const validLogin = await dbOperations.loginIsValid(record,model);
         // Write Database code here
         if (validLogin) {
+            record.username = await dbOperations.getUser({ data: record, model }).then((user) => { return user.username });
             const token = jwt.sign(record,
                 'secret'
             );
@@ -123,22 +124,52 @@ app.post('/gate', async (request,response) => {
 
 app.get('/home', tokenIsValid, async (request, response) => {
     // If token is still valid
-    // if (request.cookies.token) {
-    //     const decode = jwt.verify(request.cookies.token, 'secret', (err, decodedToken) => {
-    //         if (err) {
-    //             response.redirect(301,'gate');
-    //         }
-    //         else {
-    //             response.render('home', { data : `Welcome home, ${decodedToken.email}!` });
-    //         }
-    //     });
-    //     console.log(decode);
-    // }
-    // else {
-    //     response.redirect(301,'gate');
-    // }
     if (request.tokenIsValid) {
-        response.render('home', { data : `Welcome home!` });
+        const sequelizeInstance = require('./lib/sqlConnection');
+        const models = require('friendgroupmodels').models(sequelizeInstance);
+        const userModel = models['user'];
+        const tagModel = models['tag'];
+        const postModel = models['post'];
+        const data = { email: request.email };
+        //Fetch most recent posts
+        const user = await dbOperations.getUser({ data, model: userModel });
+        data.username = user.username;
+        data.tags = await dbOperations.getTags({ data, model: tagModel });
+        posts = await dbOperations.getPosts({ data: user, model: postModel });
+        data.posts = posts;
+        // Assigning the tag names to each given post that has said tag ids
+        data.posts.rows.forEach(async (post) => {
+            post.tags = data.tags.filter((tag) => post.tags.includes(tag.id)).map((relevantTag) => { return relevantTag.name });
+        });
+        data.tags = data.tags.map((tag) => {
+            return tag.name;
+        });
+        response.render('home', { data : data });
+    }
+    else{
+        response.redirect(301,'/gate');
+    }
+});
+
+app.post('/home', tokenIsValid, async (request, response) => {
+    // If token is still valid
+    if (request.tokenIsValid) {
+        if (!request.body.postContent) {
+            const sequelizeInstance = require('./lib/sqlConnection');
+            const models = require('friendgroupmodels').models(sequelizeInstance);
+            const userModel = models['user'];
+            const tagModel = models['tag'];
+            const postModel = models['post'];
+            const data = { email: request.email };
+            //Fetch User for Id to make post
+            const user = await dbOperations.getUser({ data, model: userModel });
+            data.tags = await dbOperations.getTags({ data, model: tagModel });
+            const post = { userId: user.id, content: request.body.writeContent, dateTimePosted: moment(), dateTimeDeleted: null, isDeleted: false, cheers: 0 };
+            post.id = `${user.id}#${post.dateTimePosted}`;
+            post.tags = data.tags.filter((tag) => Object.keys(request.body).includes(tag.name)).map((relevantTag) => { return relevantTag.id });
+            await dbOperations.createRecord({ data: post, model: postModel });
+                response.redirect(301,'/home');
+        }
     }
     else{
         response.redirect(301,'/gate');
