@@ -11,6 +11,26 @@
             text-decoration-color: white;
             font-size:7em;
         }
+        .userPostingSection {
+            position: relative;
+            margin: 0;
+            line-height: 100%;
+        }
+        .tags {
+            position: relative;
+            font-size: 15px;
+            margin: 0;
+            line-height: 100%;
+        }
+        .viewedPost {
+            font-size: 10px;
+        }
+        .postUsername {
+            font-size: 20px;
+        }
+        .postContent {
+            font-size: 15px;
+        }
     </style>
 </head>
  
@@ -20,11 +40,38 @@
     <form action="/settings" method="GET">
         <button name="settings" type="submit">Settings</button>
     </form>
-    <form action="/home" method="POST">
-        <input name="writeContent" id="writecontent" type="text" placeholder="Write Content Here"><br>
-        <label for="writeContent" text="username"></label>
-        <button name="postContent" type="submit">Post Content</button>
-    </form>
+    <div class="userPostingSection">
+        <form action="/home" method="POST">
+            <label class="postUsername" for="writeContent" text='<%= data.username %>'><%= data.username %></label><br>
+            <input name="writeContent" id="writeContent" type="text" placeholder="Write Content Here"><br>
+            <button name="postContent" type="submit">Post Content</button>
+            <br>
+            <div class="tags" >
+                <% data.tags.forEach(function(tag,index){ %>
+                    <input type="checkbox" id='<%= tag + index %>' name='<%= tag %>' value='<%= tag %>'>
+                    <label for='<%= tag + index %>'><%= tag %></label><br>
+                    <% }) %>
+            </div>
+        </form>
+    </div>
+    <ul>
+        <% data.posts.rows.forEach(function(post,index){ %>
+            <div class="viewedPost"> 
+                <h8 class="postUsername"><%= post.userId %></h8><br>
+                <% post.tags.forEach(function(tag,index){ %>
+                    <button type="submit" disabled=false name='<%= tag %>' value='<%= tag %>'><%= tag %></button>
+                    <% }) %>
+                    <br>
+                <p class="postContent"><%= post.content %></p>
+            </div>
+        <% }) %>
+    </ul>
 </body>
+<script>
+    function addTagToPost(element){
+        var newTagButton = document.createElement("button");
+        newTagButton.appendChild(document.createTextNode(element.value));
+    }
+</script>
  
 </html>   
