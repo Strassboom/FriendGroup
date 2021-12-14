@@ -44,11 +44,11 @@
         <form action="/home" method="POST">
             <label class="postUsername" for="writeContent" text='<%= data.username %>'><%= data.username %></label><br>
             <input name="writeContent" id="writeContent" type="text" placeholder="Write Content Here"><br>
-            <button name="postContent" type="submit">Post Content</button>
+            <button id="postContent" name="postContent" type="submit" disabled=true>Post Content</button>
             <br>
             <div class="tags" >
                 <% data.tags.forEach(function(tag,index){ %>
-                    <input type="checkbox" id='<%= tag + index %>' name='<%= tag %>' value='<%= tag %>'>
+                    <input type="checkbox" class="postTagOptions" id='<%= tag + index %>' name='<%= tag %>' value='<%= tag %>' oninput="decideIfPostable()">
                     <label for='<%= tag + index %>'><%= tag %></label><br>
                     <% }) %>
             </div>
@@ -68,6 +68,21 @@
     </ul>
 </body>
 <script>
+    function decideIfPostable() {
+        var checkBoxGroup = document.getElementsByClassName("postTagOptions");
+        var submitPostButton = document.getElementById("postContent");
+        var checkBoxStateGroup = [];
+        for (const checkbox of checkBoxGroup) {
+            checkBoxStateGroup.push(checkbox.checked) 
+        }
+        if (checkBoxStateGroup.includes(true)) {
+            submitPostButton.disabled = false;
+        }
+        else {
+            submitPostButton.disabled = true;
+        }
+    }
+
     function addTagToPost(element){
         var newTagButton = document.createElement("button");
         newTagButton.appendChild(document.createTextNode(element.value));
