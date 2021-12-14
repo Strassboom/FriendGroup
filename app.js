@@ -131,19 +131,20 @@ app.get('/home', tokenIsValid, async (request, response) => {
         const tagModel = models['tag'];
         const postModel = models['post'];
         const data = { email: request.email };
-        //Fetch most recent posts
-        const user = await dbOperations.getUser({ data, model: userModel });
-        data.username = user.username;
+        //Get current user
+        //Get most recent posts
+        // Get names of tags from posts and assign username to each post
         data.tags = await dbOperations.getTags({ data, model: tagModel });
-        posts = await dbOperations.getPosts({ data: user, model: postModel });
-        data.posts = posts;
-        // Assigning the tag names to each given post that has said tag ids
-        data.posts.rows.forEach(async (post) => {
-            post.tags = data.tags.filter((tag) => post.tags.includes(tag.id)).map((relevantTag) => { return relevantTag.name });
-        });
         data.tags = data.tags.map((tag) => {
             return tag.name;
         });
+        const user = await dbOperations.getUser({ data, model: userModel });
+        data.username = user.username;
+        data.posts = await dbOperations.getPosts({ data: user, model: postModel });
+        data.posts = await dbOperations.expandPostInfo({ data: data.posts, userModel, tagModel });
+        // Assigning the tag names to each given post that has said tag ids
+
+
         response.render('home', { data : data });
     }
     else{

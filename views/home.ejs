@@ -57,7 +57,7 @@
     <ul>
         <% data.posts.rows.forEach(function(post,index){ %>
             <div class="viewedPost"> 
-                <h8 class="postUsername"><%= post.userId %></h8><br>
+                <h8 class="postUsername"><%= post.username %></h8><br>
                 <% post.tags.forEach(function(tag,index){ %>
                     <button type="submit" disabled=false name='<%= tag %>' value='<%= tag %>'><%= tag %></button>
                     <% }) %>
