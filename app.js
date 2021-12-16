@@ -225,6 +225,26 @@ app.post('/settings', tokenIsValid, async (request, response) => {
     }
 });
 
+app.get('/fellows', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        // Get all users following or being followed by current user and their tags
+        const sequelizeInstance = require('./lib/sqlConnection');
+        const models = require('friendgroupmodels').models(sequelizeInstance);
+        // Get models needed
+        const userModel = models['user'];
+        const fellowshipModel = models['fellowship'];
+        const tagModel = models['tag'];
+        // Get user so you can use its id for get fellowship tags
+        const user = await dbOperations.getUser({ data: { email: request.email }, model: userModel });
+        const data = { user }
+        data.fellows = await dbOperations.getAllFellows({ publisher: user, fellowshipModel, tagModel, userModel });
+        response.render('fellows', { data });
+    }
+    else{
+        response.redirect(301,'gate');
+    }
+});
+
 const server = http.createServer(app);
 
 
