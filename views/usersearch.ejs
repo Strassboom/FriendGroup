@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+ 
+<head>
+    <title>User Search</title>
+     
+    <style type="text/css" media="screen">
+        body {
+            background-color: skyblue;
+            text-decoration-color: white;
+            font-size:7em;
+        }
+        .userSearchUsername {
+            font-size: 20px;
+        }
+        .issueTip {
+            font-size: 20px;
+            color: orange;
+        }
+    </style>
+</head>
+ 
+<body>
+    <center>Search Results</center>
+    <center><%= data.message %></center>
+    <form action="/home" method="GET">
+        <button name="Return to Home" type="submit">Return to Home</button>
+    </form>
+    <form action="/usersearch" method="POST">
+        <input name="userSearch" id="userSearch" type="text" placeholder="Search for Users Here">
+        <button name="userSearchSubmit" type="submit">Search for Users</button>
+    </form>
+    <ul>
+        <% data.strangers.forEach(function(stranger,index){ %>
+            <div class="viewedPost"> 
+                <h10 class="userSearchUsername"><%= stranger.username %></h10>
+                <button class="userSearchButton" type="submit" name='add-<%= stranger.username %>' value='<%= stranger.username %>'>Send Request</button>
+            </div>
+        <% }) %>
+        <p class="issueTip">Uh Oh! Not seeing someone? Check your spelling, or check your fellows list!</p>
+    </ul>
+</body>
+<script>
+
+
+    function addTagToPost(element){
+        var newTagButton = document.createElement("button");
+        newTagButton.appendChild(document.createTextNode(element.value));
+    }
+</script>
+ 
+</html>   

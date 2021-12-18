@@ -43,6 +43,10 @@
     <form action="/fellows" method="GET">
         <button name="fellows" type="submit">Fellows</button>
     </form>
+    <form action="/usersearch" method="POST">
+        <input name="userSearch" id="userSearch" type="text" placeholder="Search for Users Here">
+        <button name="userSearchSubmit" type="submit">Search for Users</button>
+    </form>
     <div class="userPostingSection">
         <form action="/home" method="POST">
             <label class="postUsername" for="writeContent" text='<%= data.username %>'><%= data.username %></label><br>

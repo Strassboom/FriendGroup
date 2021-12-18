@@ -245,6 +245,25 @@ app.get('/fellows', tokenIsValid, async (request, response) => {
     }
 });
 
+app.post('/usersearch', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        const sequelizeInstance = require('./lib/sqlConnection');
+        const models = require('friendgroupmodels').models(sequelizeInstance);
+        const userModel = models['user'];
+        const fellowshipModel = models['fellowship'];
+        const data = { email: request.email };
+        const user = await dbOperations.getUser({ data, model: userModel });
+        data.id = user.id;
+        data.username = request.body.userSearch;
+        const strangers = await dbOperations.getUserSearch({ data, userModel, fellowshipModel })
+        const message = "Welcome to the User Search Page!";
+        response.render('usersearch', { data : { strangers: strangers, message: message } });
+    }
+    else{
+        response.redirect(301,'gate');
+    }
+});
+
 const server = http.createServer(app);
 
 
