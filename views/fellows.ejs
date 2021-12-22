@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html>
+ 
+<head>
+    <title>Fellows Page</title>
+     
+    <style type="text/css" media="screen">
+        body {
+            background-color: skyblue;
+            text-decoration-color: white;
+            font-size:7em;
+        }
+        .tags {
+            position: relative;
+            font-size: 15px;
+            margin: 0;
+            line-height: 100%;
+        }
+        .youAreFollowingTag {
+            color: blue;
+        }
+        .youAreBeingFollowedTag {
+            color: orange;
+        }
+    </style>
+</head>
+ 
+<body>
+    <center>This is your fellows page.</center>
+    <center><%= data.user.username %></center>
+    <form action="/home" method="GET">
+        <button name="Return to Home" type="submit">Return to Home</button>
+    </form>
+    <div class="allFellowsContainer">
+        <ul>
+            <% data.fellows.forEach(function(fellow,index){ %>
+                <div class="allFellowsFellowContainer">
+                    <form action="/fellows" method="POST">
+                        <h8 class="allFellowsUsername"><%= fellow.username %></h8>
+                        <% fellow.youAreFollowingTags.forEach(function(tag,index){ %>
+                            <button type="submit" class="youAreFollowingTag" disabled=false name='<%= tag %>' value='<%= tag %>'><%= tag %></button>
+                        <% }) %>
+                        <% fellow.youAreBeingFollowedTags.forEach(function(tag,index){ %>
+                            <button type="submit" class="youAreBeingFollowedTag" disabled=false name='<%= tag %>' value='<%= tag %>'><%= tag %></button>
+                        <% }) %>
+                        <button type="submit" class="remove-user" name=remove-user value='<%= fellow.username %>'>Remove User</button>
+                    </form> 
+                    <br>
+                </div>
+            <% }) %>
+        </ul>
+    </div>
+</body>
+<script>
+    function addTagToPost(element){
+        var newTagButton = document.createElement("button");
+        newTagButton.appendChild(document.createTextNode(element.value));
+    }
+</script>
+ 
+</html>   

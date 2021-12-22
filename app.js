@@ -152,6 +152,7 @@ app.get('/home', tokenIsValid, async (request, response) => {
     }
 });
 
+// Redirects to a GET request for /home
 app.post('/home', tokenIsValid, async (request, response) => {
     // If token is still valid
     if (request.tokenIsValid) {
@@ -221,6 +222,198 @@ app.post('/settings', tokenIsValid, async (request, response) => {
         response.render('settings', { data : `Welcome to Settings, ${userData.username}!` });
     }
     else{
+        response.redirect(301,'gate');
+    }
+});
+
+app.get('/fellows', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        // Get all users following or being followed by current user and their tags
+        const sequelizeInstance = require('./lib/sqlConnection');
+        const models = require('friendgroupmodels').models(sequelizeInstance);
+        // Get models needed
+        const userModel = models['user'];
+        const fellowshipModel = models['fellowship'];
+        const tagModel = models['tag'];
+        // Get user so you can use its id for get fellowship tags
+        const user = await dbOperations.getUser({ data: { email: request.email }, model: userModel });
+        const data = { user }
+        data.fellows = await dbOperations.getAllFellows({ publisher: user, fellowshipModel, tagModel, userModel });
+        response.render('fellows', { data });
+    }
+    else{
+        response.redirect(301,'gate');
+    }
+});
+
+app.post('/fellows', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        // Get all users following or being followed by current user and their tags
+        const sequelizeInstance = require('./lib/sqlConnection');
+        const models = require('friendgroupmodels').models(sequelizeInstance);
+        // Get models needed
+        const userModel = models['user'];
+        const fellowshipModel = models['fellowship'];
+        const tagModel = models['tag'];
+        // Get user so you can use its id for get fellowship tags
+        const user = await dbOperations.getUser({ data: { email: request.email }, model: userModel });
+        const fellowInfo = await dbOperations.getUsersByUsername({ data: { username: request.body['remove-user'] }, model: userModel });
+        const fellow = fellowInfo[0];
+        const data = { user }
+        // Sever all connection with user
+        await dbOperations.deleteFellow({ data: { publisherId: user.id, subscriberId: fellow.id }, model: fellowshipModel });
+        await dbOperations.deleteFellow({ data: { publisherId: fellow.id, subscriberId: user.id }, model: fellowshipModel });
+        response.redirect(301, 'fellows');
+    }
+    else{
+        response.redirect(301,'gate');
+    }
+});
+
+app.post('/usersearch', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        // If user is sending a fellow request
+        if (request.body['add-user']) {
+            // Generic info
+            const sequelizeInstance = require('./lib/sqlConnection');
+            const models = require('friendgroupmodels').models(sequelizeInstance);
+            const userModel = models['user'];
+            const fellowRequestModel = models['fellowrequest'];
+            const data = { email: request.email };
+            const user = await dbOperations.getUser({ data, model: userModel });
+            const publisher = await dbOperations.getUsersByUsername({ data: { username: request.body['add-user'] }, model: userModel });
+            // Create fellowrequest record
+            await dbOperations.createRecord({ data: { publisherId: publisher[0].id, subscriberId: user.id, dateTimeCreated: moment().format() }, model: fellowRequestModel }).then(async function (sendResults) {
+                console.log(sendResults);    
+                if (sendResults.error) {
+                    console.log(sendResults.error, { sendResults })
+                    }
+                }).catch(async function (error) {
+                    console.log(error);
+                });
+            data.strangers = [];
+            response.render('usersearch', { data });
+        }
+        // If user not adding other user, load all results from searchbar
+        else {
+            const sequelizeInstance = require('./lib/sqlConnection');
+            const models = require('friendgroupmodels').models(sequelizeInstance);
+            const userModel = models['user'];
+            const fellowshipModel = models['fellowship'];
+            const fellowRequestModel = models['fellowrequest'];
+            const data = { email: request.email };
+            const user = await dbOperations.getUser({ data, model: userModel });
+            data.id = user.id;
+            data.username = request.body.userSearch;
+            data.target = await dbOperations.getUsersByUsername({ data: { username: data.username }, model: userModel });
+            data.target = data.target[0];
+            const strangers = await dbOperations.getUserSearch({ data, userModel, fellowshipModel });
+            const strangersList = strangers.map((stranger) => { return stranger.username });
+            const requesters = await dbOperations.getFellowRequests({ data, userModel, fellowRequestModel });
+            const requestersList = requesters.map((requester) => { return requester.username });
+            const message = "Welcome to the User Search Page!";
+            data.strangers = strangers.filter(stranger => !requesters.map(requester => requester.username).includes(stranger.username));
+            if (user.username == data.username) {
+                data.strangers = [];
+            }
+            data.message = message;
+            delete data.id;
+            delete data.target;
+            delete data.username;
+            delete data.email;
+            response.render('usersearch', { data });
+        }
+    }
+    else{
+        response.redirect(301,'gate');
+    }
+});
+
+// Quickfix for staying on usersearch after adding an individual or refreshing the page
+app.get('/usersearch', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        const data = { email: request.email };
+        data.strangers = [];
+        response.render('usersearch', { data });
+    }
+    else{
+        response.redirect(301,'gate');
+    }
+});
+
+// Presents all fellow requests by other users to follow current user
+app.get('/fellowrequests', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        const sequelizeInstance = require('./lib/sqlConnection');
+        const models = require('friendgroupmodels').models(sequelizeInstance);
+        const userModel = models['user'];
+        const fellowRequestModel = models['fellowrequest'];
+        const tagModel = models['tag'];
+        const data = { email: request.email };
+        const user = await dbOperations.getUser({ data, model: userModel });
+        data.strangers = await dbOperations.getUserFellowRequests({ publisher: user, fellowRequestModel, userModel });
+        data.tags = await dbOperations.getTags({ model: tagModel });
+        data.tags = data.tags.map((tag) => {
+            return tag.name;
+        });
+        response.render('fellowrequests', { data });
+    }
+    else {
+        response.redirect(301,'gate');
+    }
+});
+
+// Updates fellow requests list with any changes performed by user (accepting/rejecting a user)
+app.post('/fellowrequests', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        if (request.body['accept-user']) {
+            const sequelizeInstance = require('./lib/sqlConnection');
+            const models = require('friendgroupmodels').models(sequelizeInstance);
+            const userModel = models['user'];
+            const fellowRequestModel = models['fellowrequest'];
+            const fellowshipModel = models['fellowship'];
+            const data = { email: request.email };
+            // Add user with tags to fellowship db
+            const user = await dbOperations.getUser({ data, model: userModel });
+            const subscriberInfo = await dbOperations.getUsersByUsername({ data: { username: request.body['accept-user'] }, model: userModel });
+            const subscriber = subscriberInfo[0];
+            const fellowships = [];
+            const tags = request.body;
+            delete tags['accept-user'];
+            for (const tag in request.body) {
+                fellowships.push({ publisherId: user.id, subscriberId: subscriber.id, tagId: request.body[tag].split('-')[1], dateTimeCreated: moment().format() });
+            }
+            for (const fellowship of fellowships) {
+                await dbOperations.createRecord({ data: fellowship, model: fellowshipModel });
+            }
+            await dbOperations.deleteFellowRequest({ data: { publisherId: user.id, subscriberId: subscriber.id }, model: fellowRequestModel });
+            response.redirect(301,'fellowrequests');
+        }
+        else {
+            const sequelizeInstance = require('./lib/sqlConnection');
+            const models = require('friendgroupmodels').models(sequelizeInstance);
+            const userModel = models['user'];
+            const fellowRequestModel = models['fellowrequest'];
+            const data = { email: request.email };
+            // Add user with tags to fellowship db
+            const user = await dbOperations.getUser({ data, model: userModel });
+            const subscriber = await dbOperations.getUsersByUsername({ data: { username: request.body['reject-user'] }, model: userModel });
+            await dbOperations.deleteFellowRequest({ data: { publisherId: user.id, subscriberId: subscriber[0].id }, model: fellowRequestModel });
+            response.redirect(301,'fellowrequests');
+        }
+    }
+    else {
+        response.redirect(301,'gate');
+    }
+});
+
+// Logs user out of the network
+app.get('/logout', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        response.clearCookie("key");
+        response.redirect(301,'gate');
+    }
+    else {
         response.redirect(301,'gate');
     }
 });

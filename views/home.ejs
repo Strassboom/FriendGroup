@@ -37,8 +37,21 @@
 <body>
     <center>This is our home page.</center>
     <center><%= data.message %></center>
+    <form action="/logout" method="GET">
+        <button name="logout" type="submit">Log Out</button>
+    </form>
     <form action="/settings" method="GET">
         <button name="settings" type="submit">Settings</button>
+    </form>
+    <form action="/fellows" method="GET">
+        <button name="fellows" type="submit">Fellows</button>
+    </form>
+    <form action="/fellowrequests" method="GET">
+        <button name="fellowRequests" type="submit">Fellow Requests</button>
+    </form>
+    <form action="/usersearch" method="POST">
+        <input name="userSearch" id="userSearch" type="text" placeholder="Search for Users Here">
+        <button name="userSearchSubmit" type="submit">Search for Users</button>
     </form>
     <div class="userPostingSection">
         <form action="/home" method="POST">

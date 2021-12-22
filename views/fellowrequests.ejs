@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+ 
+<head>
+    <title>Fellow Requests</title>
+     
+    <style type="text/css" media="screen">
+        body {
+            background-color: skyblue;
+            text-decoration-color: white;
+            font-size:7em;
+        }
+        .userSearchUsername {
+            font-size: 20px;
+        }
+        .tags {
+            position: relative;
+            font-size: 15px;
+            margin: 0;
+            line-height: 100%;
+        }
+        .issueTip {
+            font-size: 20px;
+            color: orange;
+        }
+    </style>
+</head>
+ 
+<body>
+    <center>Fellow Requests</center>
+    <center><%= data.message %></center>
+    <form action="/home" method="GET">
+        <button name="Return to Home" type="submit">Return to Home</button>
+    </form>
+    <ul>
+        <% data.strangers.forEach(function(stranger,index){ %>
+            <div class="viewedUserSearchUser"> 
+                <form action="/fellowrequests" method="POST">
+                    <h10 class="fellowRequestUsername"><%= stranger.username %></h10>
+                    <div class="tags">
+                        <% data.tags.forEach(function(tag,index){ %>
+                            <input type="checkbox" class="fellowRequestTagOptions" id='<%= tag + (index+1) %>' name='<%= tag %>' value='<%= tag + "-" + (index+1) %>' onchange="decideIfPostable(this)">
+                            <label for='<%= tag + (index+1) %>'><%= tag %></label>
+                        <% }) %>
+                    </div>
+                    <button class="fellowRequestAcceptButton" type="submit" disabled=true name='accept-user' value='<%= stranger.username %>'>Accept Request</button>
+                    <button class="fellowRequestRejectButton" type="submit" name='reject-user' value='<%= stranger.username %>'>Reject Request</button>
+                </form>
+            </div>
+        <% }) %>
+    </ul>
+</body>
+<script>
+    function decideIfPostable(element) {
+        var checkBoxGroup = element.parentElement.getElementsByClassName("fellowRequestTagOptions");
+        var fellowRequestAcceptButton = element.parentElement.parentElement.getElementsByClassName("fellowRequestAcceptButton")[0];
+        var checkBoxStateGroup = [];
+        for (const checkbox of checkBoxGroup) {
+            checkBoxStateGroup.push(checkbox.checked) 
+        }
+        if (checkBoxStateGroup.includes(true)) {
+            fellowRequestAcceptButton.disabled = false;
+        }
+        else {
+            fellowRequestAcceptButton.disabled = true;
+        }
+    }
+
+    // for (const element of document.getElementsByClassName("userSearchTagOptions")) {
+    //     element.addEventListener("click", decideIfPostable);
+    // }
+
+    function addTagToPost(element){
+        var newTagButton = document.createElement("button");
+        newTagButton.appendChild(document.createTextNode(element.value));
+    }
+</script>
+ 
+</html>   
