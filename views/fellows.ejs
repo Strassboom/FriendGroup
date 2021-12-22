@@ -35,14 +35,17 @@
     <div class="allFellowsContainer">
         <ul>
             <% data.fellows.forEach(function(fellow,index){ %>
-                <div class="allFellowsFellowContainer"> 
-                    <h8 class="allFellowsUsername"><%= fellow.username %></h8>
-                    <% fellow.youAreFollowingTags.forEach(function(tag,index){ %>
-                        <button type="submit" class="youAreFollowingTag" disabled=false name='<%= tag %>' value='<%= tag %>'><%= tag %></button>
-                    <% }) %>
-                    <% fellow.youAreBeingFollowedTags.forEach(function(tag,index){ %>
-                        <button type="submit" class="youAreBeingFollowedTag" disabled=false name='<%= tag %>' value='<%= tag %>'><%= tag %></button>
-                    <% }) %>
+                <div class="allFellowsFellowContainer">
+                    <form action="/fellows" method="POST">
+                        <h8 class="allFellowsUsername"><%= fellow.username %></h8>
+                        <% fellow.youAreFollowingTags.forEach(function(tag,index){ %>
+                            <button type="submit" class="youAreFollowingTag" disabled=false name='<%= tag %>' value='<%= tag %>'><%= tag %></button>
+                        <% }) %>
+                        <% fellow.youAreBeingFollowedTags.forEach(function(tag,index){ %>
+                            <button type="submit" class="youAreBeingFollowedTag" disabled=false name='<%= tag %>' value='<%= tag %>'><%= tag %></button>
+                        <% }) %>
+                        <button type="submit" class="remove-user" name=remove-user value='<%= fellow.username %>'>Remove User</button>
+                    </form> 
                     <br>
                 </div>
             <% }) %>

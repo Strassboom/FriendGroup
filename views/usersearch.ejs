@@ -13,6 +13,12 @@
         .userSearchUsername {
             font-size: 20px;
         }
+        .tags {
+            position: relative;
+            font-size: 15px;
+            margin: 0;
+            line-height: 100%;
+        }
         .issueTip {
             font-size: 20px;
             color: orange;
@@ -32,21 +38,14 @@
     </form>
     <ul>
         <% data.strangers.forEach(function(stranger,index){ %>
-            <div class="viewedPost"> 
-                <h10 class="userSearchUsername"><%= stranger.username %></h10>
-                <button class="userSearchButton" type="submit" name='add-<%= stranger.username %>' value='<%= stranger.username %>'>Send Request</button>
+            <div class="viewedUserSearchUser"> 
+                <form action="/usersearch" method="POST">
+                    <h10 class="userSearchUsername"><%= stranger.username %></h10>
+                    <button class="userSearchSendRequestButton" type="submit" name='add-user' value='<%= stranger.username %>'>Send Request</button>
+                </form>
             </div>
         <% }) %>
         <p class="issueTip">Uh Oh! Not seeing someone? Check your spelling, or check your fellows list!</p>
     </ul>
 </body>
-<script>
-
-
-    function addTagToPost(element){
-        var newTagButton = document.createElement("button");
-        newTagButton.appendChild(document.createTextNode(element.value));
-    }
-</script>
- 
 </html>   
