@@ -130,6 +130,7 @@ app.get('/home', tokenIsValid, async (request, response) => {
         const userModel = models['user'];
         const tagModel = models['tag'];
         const postModel = models['post'];
+        const fellowshipModel = models['fellowship'];
         const data = { email: request.email };
         //Get current user
         //Get most recent posts
@@ -139,8 +140,10 @@ app.get('/home', tokenIsValid, async (request, response) => {
             return tag.name;
         });
         const user = await dbOperations.getUser({ data, model: userModel });
+        data.id = user.id;
         data.username = user.username;
-        data.posts = await dbOperations.getPosts({ data: user, model: postModel });
+        data.posts = await dbOperations.getPostsExpanded({ data, userModel, postModel, fellowshipModel });
+        //data.posts = await dbOperations.getPosts({ data: user, model: postModel });
         data.posts = await dbOperations.expandPostInfo({ data: data.posts, userModel, tagModel });
         // Assigning the tag names to each given post that has said tag ids
 
