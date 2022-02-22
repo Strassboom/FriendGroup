@@ -28,7 +28,7 @@
     "email-validator": "^2.0.4",
     "express": "^4.17.1",
     "express-react-views": "^0.11.0",
-    "friendgroupmodels": "^1.0.36",
+    "friendgroupmodels": "^1.0.37",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.34",

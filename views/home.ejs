@@ -53,6 +53,9 @@
         <input name="userSearch" id="userSearch" type="text" placeholder="Search for Users Here">
         <button name="userSearchSubmit" type="submit">Search for Users</button>
     </form>
+    <form action="/publicusersearch" method="POST">
+        <button name="userSearchSubmit" type="submit">Search for Public Users</button>
+    </form>
     <div class="userPostingSection">
         <form action="/home" method="POST">
             <label class="postUsername" for="writeContent" text='<%= data.username %>'><%= data.username %></label><br>

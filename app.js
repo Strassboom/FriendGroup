@@ -210,7 +210,8 @@ app.post('/settings', tokenIsValid, async (request, response) => {
         const sequelizeInstance = require('./lib/sqlConnection');
         const models = require('friendgroupmodels').models(sequelizeInstance);
         const model = models['user'];
-        const record = { email: request.body.email, username: request.body.username, password: request.body.password };
+        const searchable = true ? typeof request.body.searchable !== 'undefined' : false;
+        const record = { email: request.body.email, username: request.body.username, password: request.body.password, searchable: searchable };
         console.log(record);
         await dbOperations.updateRecord({ currentEmail: request.email, data: record, model });
         if (record.email == null || record.email.trim().length == 0) {
@@ -338,6 +339,85 @@ app.get('/usersearch', tokenIsValid, async (request, response) => {
         const data = { email: request.email };
         data.strangers = [];
         response.render('usersearch', { data });
+    }
+    else{
+        response.redirect(301,'gate');
+    }
+});
+
+app.post('/publicusersearch', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        // If user is sending a fellow request
+        if (request.body['add-user']) {
+            // Generic info
+            const sequelizeInstance = require('./lib/sqlConnection');
+            const models = require('friendgroupmodels').models(sequelizeInstance);
+            const userModel = models['user'];
+            const fellowRequestModel = models['fellowrequest'];
+            const data = { email: request.email };
+            const user = await dbOperations.getUser({ data, model: userModel });
+            const publisher = await dbOperations.getUsersByUsername({ data: { username: request.body['add-user'] }, model: userModel });
+            // Create fellowrequest record
+            await dbOperations.createRecord({ data: { publisherId: publisher[0].id, subscriberId: user.id, dateTimeCreated: moment().format() }, model: fellowRequestModel }).then(async function (sendResults) {
+                console.log(sendResults);    
+                if (sendResults.error) {
+                    console.log(sendResults.error, { sendResults })
+                    }
+                }).catch(async function (error) {
+                    console.log(error);
+                });
+            data.strangers = [];
+            response.render('usersearch', { data });
+        }
+        // If user not adding other user, load all results from searchbar
+        else {
+            const sequelizeInstance = require('./lib/sqlConnection');
+            const models = require('friendgroupmodels').models(sequelizeInstance);
+            const userModel = models['user'];
+            const postModel = models['post'];
+            const tagModel = models['tag'];
+            const fellowshipModel = models['fellowship'];
+            const fellowRequestModel = models['fellowrequest'];
+            const data = { email: request.email };
+            const user = await dbOperations.getUser({ data, model: userModel });
+            data.id = user.id;
+            data.username = request.body.userSearch;
+            data.targets = await dbOperations.getNewestPublicUsers({ data, userModel, fellowshipModel });
+            data.strangers = await dbOperations.getNewestPublicPost({ data, postModel, tagModel });
+            const message = "Welcome to the User Search Page!";
+            data.message = message;
+            delete data.id;
+            delete data.username;
+            delete data.email;
+            response.render('publicusersearch', { data });
+        }
+    }
+    else{
+        response.redirect(301,'gate');
+    }
+});
+
+app.get('/publicusersearch', tokenIsValid, async (request, response) => {
+    if (request.tokenIsValid) {
+        const sequelizeInstance = require('./lib/sqlConnection');
+        const models = require('friendgroupmodels').models(sequelizeInstance);
+        const userModel = models['user'];
+        const postModel = models['post'];
+        const tagModel = models['tag'];
+        const fellowshipModel = models['fellowship'];
+        const fellowRequestModel = models['fellowrequest'];
+        const data = { email: request.email };
+        const user = await dbOperations.getUser({ data, model: userModel });
+        data.id = user.id;
+        data.username = request.body.userSearch;
+        data.targets = await dbOperations.getNewestPublicUsers({ data, userModel, fellowshipModel });
+        data.strangers = await dbOperations.getNewestPublicPost({ data, postModel, tagModel });
+        const message = "Welcome to the User Search Page!";
+        data.message = message;
+        delete data.id;
+        delete data.username;
+        delete data.email;
+        response.render('publicusersearch', { data });
     }
     else{
         response.redirect(301,'gate');
