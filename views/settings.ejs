@@ -20,6 +20,9 @@
  
 <body>
     <center><%= data %></center>
+    <form action="/home" method="GET">
+        <button name="Return to Home" type="submit">Return to Home</button>
+    </form>
     <form action="/settings" method="POST">
         <input name="username" id="username" type="text" placeholder="Username"><br>
         <label for="username" text="Username:"></label>
@@ -33,9 +36,6 @@
         <input name="searchable" id="searchable" type="checkbox">
         <label class="externalLabel" for="searchable" text="Searchable?">Searchable?</label><br>
         <button name="SaveSettings" type="submit">Save Settings</button>
-    </form>
-    <form action="/home" method="GET">
-        <button name="Return to Home" type="submit">Return to Home</button>
     </form>
 </body>
  

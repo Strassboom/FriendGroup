@@ -310,21 +310,26 @@ app.post('/usersearch', tokenIsValid, async (request, response) => {
             data.id = user.id;
             data.username = request.body.userSearch;
             data.target = await dbOperations.getUsersByUsername({ data: { username: data.username }, model: userModel });
-            data.target = data.target[0];
-            const strangers = await dbOperations.getUserSearch({ data, userModel, fellowshipModel });
-            const strangersList = strangers.map((stranger) => { return stranger.username });
-            const requesters = await dbOperations.getFellowRequests({ data, userModel, fellowRequestModel });
-            const requestersList = requesters.map((requester) => { return requester.username });
-            const message = "Welcome to the User Search Page!";
-            data.strangers = strangers.filter(stranger => !requesters.map(requester => requester.username).includes(stranger.username));
-            if (user.username == data.username) {
+            if (data.target.length > 0){
+                data.target = data.target[0];
+                const strangers = await dbOperations.getUserSearch({ data, userModel, fellowshipModel });
+                const strangersList = strangers.map((stranger) => { return stranger.username });
+                const requesters = await dbOperations.getFellowRequests({ data, userModel, fellowRequestModel });
+                const requestersList = requesters.map((requester) => { return requester.username });
+                const message = "Welcome to the User Search Page!";
+                data.strangers = strangers.filter(stranger => !requesters.map(requester => requester.username).includes(stranger.username));    
+                if (user.username == data.username) {
+                    data.strangers = [];
+                }
+                data.message = message;
+                delete data.id;
+                delete data.target;
+                delete data.username;
+                delete data.email;
+            }
+            else {
                 data.strangers = [];
             }
-            data.message = message;
-            delete data.id;
-            delete data.target;
-            delete data.username;
-            delete data.email;
             response.render('usersearch', { data });
         }
     }

@@ -43,12 +43,14 @@
         <% data.strangers.forEach(function(stranger,index){ %>
             <div class="viewedUserSearchUser"> 
                 <form action="/usersearch" method="POST">
-                    <h10 class="userSearchUsername"><%= stranger.username %></h10>
-                    <% stranger.post.tags.forEach(function(tag,index){ %>
-                        <button type="submit" disabled=false name='<%= tag %>' value='<%= tag %>'><%= tag %></button>
+                    <% stranger.posts.forEach(function(post,index){ %>
+                        <h10 class="userSearchUsername"><%= stranger.username %></h10>
+                        <% post.tags.forEach(function(tag,index){ %>
+                            <button type="submit" disabled=false name='<%= tag %>' value='<%= tag %>'><%= tag %></button>
                         <% }) %>
                         <br>
-                    <p class="postContent"><%= stranger.post.content %></p>
+                        <p class="postContent"><%= post.content %></p>
+                    <% }) %>
                     <button class="userSearchSendRequestButton" type="submit" name='add-user' value='<%= stranger.username %>'>Send Request</button>
                 </form>
             </div>
