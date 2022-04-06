@@ -11,6 +11,7 @@ const Promise = require('bluebird');
 const moment = require('moment');
 const jwt = require('jsonwebtoken');
 const cookieParser = require("cookie-parser");
+const tag = require('friendgroupmodels/tag');
 
 app.set('views', __dirname + '\\views');
 app.set('view engine', 'ejs');
@@ -69,6 +70,9 @@ app.post('/gate', async (request,response) => {
     // If registering
     if ('registerButton' in request.body) {
         const record = { email: request.body.email, password: request.body.password };
+        const tagModel = models['tag'];
+        const tags = await dbOperations.getTags({ model: tagModel });
+        record.tags = tags.map((tag) => tag.id);
         // If Username and password are valid
         const validRegister = await dbOperations.registerIsValid(record,model);
         console.log(validRegister);
@@ -132,16 +136,31 @@ app.get('/home', tokenIsValid, async (request, response) => {
         const postModel = models['post'];
         const fellowshipModel = models['fellowship'];
         const data = { email: request.email };
+        const tags = await dbOperations.getTags({ data, model: tagModel });
+        const tagsDict = {};
+        for (const tag of tags) {
+            tagsDict[tag.id] = tag.name;
+        }
         //Get current user
         //Get most recent posts
         // Get names of tags from posts and assign username to each post
-        data.tags = await dbOperations.getTags({ data, model: tagModel });
+        data.tags = tags;
         data.tags = data.tags.map((tag) => {
             return tag.name;
         });
         const user = await dbOperations.getUser({ data, model: userModel });
         data.id = user.id;
         data.username = user.username;
+        data.viewTags = [];
+        for (const tag of user.tags) {
+            if (tagsDict[tag] != 'Public') {
+                data.viewTags.push(tag);
+            }
+            else {
+                data.publicTag = tag;
+            }
+        }
+
         data.posts = await dbOperations.getPostsExpanded({ data, userModel, postModel, fellowshipModel });
         //data.posts = await dbOperations.getPosts({ data: user, model: postModel });
         data.posts = await dbOperations.expandPostInfo({ data: data.posts, userModel, tagModel });
@@ -193,12 +212,24 @@ app.get('/settings', tokenIsValid, async (request, response) => {
     if (request.tokenIsValid) {
         const sequelizeInstance = require('./lib/sqlConnection');
         const models = require('friendgroupmodels').models(sequelizeInstance);
-        const model = models['user'];
+        const tagModel = models['tag'];
+        const userModel = models['user'];
+        const tags = await dbOperations.getTags({ model: tagModel });
         const record = { email: request.email };
         console.log(record);
-        const userData = await dbOperations.getUser({ data: record, model });
+        const userData = await dbOperations.getUser({ data: record, model: userModel });
         // response.redirect(301,'/settings');
-        response.render('settings', { data : `Welcome to Settings, ${userData.username}!` });
+        const searchable = userData.searchable;
+        const userTags = [];
+        for (i = 0; i < tags.length; i++) {
+            if (userData.tags.includes(tags[i].id)) {
+                tags[i].included = true;
+            }
+            else {
+                tags[i].included = false;
+            }
+        }
+        response.render('settings', { data : { greeting: `Welcome to Settings, ${userData.username}!`, searchable, tags } });
     }
     else{
         response.redirect(301,'gate');
@@ -210,8 +241,11 @@ app.post('/settings', tokenIsValid, async (request, response) => {
         const sequelizeInstance = require('./lib/sqlConnection');
         const models = require('friendgroupmodels').models(sequelizeInstance);
         const model = models['user'];
-        const searchable = true ? typeof request.body.searchable !== 'undefined' : false;
-        const record = { email: request.body.email, username: request.body.username, password: request.body.password, searchable: searchable };
+        const tagModel = models['tag'];
+        const tags = await dbOperations.getTags({ model: tagModel });
+        const searchable = Object.keys(request.body).includes('searchable') ? true  : false;
+        const record = { email: request.body.email, username: request.body.username, password: request.body.password, searchable };
+        record.tags = tags.filter((tag) => Object.keys(request.body).includes(tag.name)).map((relevantTag) => { return relevantTag.id });
         console.log(record);
         await dbOperations.updateRecord({ currentEmail: request.email, data: record, model });
         if (record.email == null || record.email.trim().length == 0) {
@@ -223,7 +257,15 @@ app.post('/settings', tokenIsValid, async (request, response) => {
         );
         response.cookie('token', token);
         // response.redirect(301,'/settings');
-        response.render('settings', { data : `Welcome to Settings, ${userData.username}!` });
+        for (i = 0; i < tags.length; i++) {
+            if (record.tags.includes(tags[i].id)) {
+                tags[i].included = true;
+            }
+            else {
+                tags[i].included = false;
+            }
+        }
+        response.render('settings', { data : { greeting: `Welcome to Settings, ${userData.username}!`, searchable, tags } });
     }
     else{
         response.redirect(301,'gate');
@@ -353,14 +395,35 @@ app.get('/usersearch', tokenIsValid, async (request, response) => {
 app.post('/publicusersearch', tokenIsValid, async (request, response) => {
     if (request.tokenIsValid) {
         // If user is sending a fellow request
-        if (request.body['add-user']) {
+        if (request.body['add-user'] && request.body["userSearchSubmit"].trim().length > 0) {
             // Generic info
             const sequelizeInstance = require('./lib/sqlConnection');
             const models = require('friendgroupmodels').models(sequelizeInstance);
             const userModel = models['user'];
+            const tagModel = models['user'];
             const fellowRequestModel = models['fellowrequest'];
             const data = { email: request.email };
+            const tags = await dbOperations.getTags({ data, model: tagModel });
+            const tagsDict = {};
+            for (const tag of tags) {
+                tagsDict[tag.id] = tag.name;
+            }
+            data.tags = tags;
+            data.tags = data.tags.map((tag) => {
+                return tag.name;
+            });
             const user = await dbOperations.getUser({ data, model: userModel });
+            data.id = user.id;
+            data.username = user.username;
+            data.viewTags = [];
+            for (const tag of user.tags) {
+                if (tagsDict[tag] != 'Public') {
+                    data.viewTags.push(tag);
+                }
+                else {
+                    data.publicTag = tag;
+                }
+            }
             const publisher = await dbOperations.getUsersByUsername({ data: { username: request.body['add-user'] }, model: userModel });
             // Create fellowrequest record
             await dbOperations.createRecord({ data: { publisherId: publisher[0].id, subscriberId: user.id, dateTimeCreated: moment().format() }, model: fellowRequestModel }).then(async function (sendResults) {
@@ -384,8 +447,27 @@ app.post('/publicusersearch', tokenIsValid, async (request, response) => {
             const fellowshipModel = models['fellowship'];
             const fellowRequestModel = models['fellowrequest'];
             const data = { email: request.email };
+            const tags = await dbOperations.getTags({ data, model: tagModel });
+            const tagsDict = {};
+            for (const tag of tags) {
+                tagsDict[tag.id] = tag.name;
+            }
+            data.tags = tags;
+            data.tags = data.tags.map((tag) => {
+                return tag.name;
+            });
             const user = await dbOperations.getUser({ data, model: userModel });
             data.id = user.id;
+            data.username = user.username;
+            data.viewTags = [];
+            for (const tag of user.tags) {
+                if (tagsDict[tag] != 'Public') {
+                    data.viewTags.push(tag);
+                }
+                else {
+                    data.publicTag = tag;
+                }
+            }
             data.username = request.body.userSearch;
             data.targets = await dbOperations.getNewestPublicUsers({ data, userModel, fellowshipModel });
             data.strangers = await dbOperations.getNewestPublicPost({ data, postModel, tagModel });
