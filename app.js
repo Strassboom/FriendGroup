@@ -75,7 +75,7 @@ app.post('/gate', async (request,response) => {
         record.tags = tags.map((tag) => tag.id);
         // If Username and password are valid
         const validRegister = await dbOperations.registerIsValid(record,model);
-        console.log(validRegister);
+        // console.log(validRegister);
 
         // Write Database code here
         if (validRegister) {
@@ -84,7 +84,7 @@ app.post('/gate', async (request,response) => {
             record.id = `${request.hostname}-${dateTimeCreated.unix()}`;
             record.username = record.email;
             await dbOperations.createRecord({ data: record, model }).then(async function (sendResults) {
-                console.log(sendResults);    
+                // console.log(sendResults);    
                 if (sendResults.error) {
                     console.log(sendResults.error, { sendResults })
                     }
@@ -99,7 +99,7 @@ app.post('/gate', async (request,response) => {
         // If Username and password are NOT valid
         else {
             info.data = 'Account not created! Email or Password invalid!';
-            console.log(info.data);
+            // console.log(info.data);
             response.render('gate', { data: info.data });
         }
 
@@ -200,7 +200,8 @@ app.post('/home', tokenIsValid, async (request, response) => {
             }
         }
         else {
-            response.redirect(301,'/home');
+            response.redirect(301,'/gate');
+
         }
     }
     else{
@@ -216,7 +217,7 @@ app.get('/settings', tokenIsValid, async (request, response) => {
         const userModel = models['user'];
         const tags = await dbOperations.getTags({ model: tagModel });
         const record = { email: request.email };
-        console.log(record);
+        // console.log(record);
         const userData = await dbOperations.getUser({ data: record, model: userModel });
         // response.redirect(301,'/settings');
         const searchable = userData.searchable;
@@ -246,7 +247,7 @@ app.post('/settings', tokenIsValid, async (request, response) => {
         const searchable = Object.keys(request.body).includes('searchable') ? true  : false;
         const record = { email: request.body.email, username: request.body.username, password: request.body.password, searchable };
         record.tags = tags.filter((tag) => Object.keys(request.body).includes(tag.name)).map((relevantTag) => { return relevantTag.id });
-        console.log(record);
+        // console.log(record);
         await dbOperations.updateRecord({ currentEmail: request.email, data: record, model });
         if (record.email == null || record.email.trim().length == 0) {
             record.email = request.email;
@@ -330,7 +331,7 @@ app.post('/usersearch', tokenIsValid, async (request, response) => {
             const publisher = await dbOperations.getUsersByUsername({ data: { username: request.body['add-user'] }, model: userModel });
             // Create fellowrequest record
             await dbOperations.createRecord({ data: { publisherId: publisher[0].id, subscriberId: user.id, dateTimeCreated: moment().format() }, model: fellowRequestModel }).then(async function (sendResults) {
-                console.log(sendResults);    
+                // console.log(sendResults);    
                 if (sendResults.error) {
                     console.log(sendResults.error, { sendResults })
                     }
@@ -427,7 +428,7 @@ app.post('/publicusersearch', tokenIsValid, async (request, response) => {
             const publisher = await dbOperations.getUsersByUsername({ data: { username: request.body['add-user'] }, model: userModel });
             // Create fellowrequest record
             await dbOperations.createRecord({ data: { publisherId: publisher[0].id, subscriberId: user.id, dateTimeCreated: moment().format() }, model: fellowRequestModel }).then(async function (sendResults) {
-                console.log(sendResults);    
+                // console.log(sendResults);    
                 if (sendResults.error) {
                     console.log(sendResults.error, { sendResults })
                     }
@@ -574,6 +575,48 @@ app.post('/fellowrequests', tokenIsValid, async (request, response) => {
     }
     else {
         response.redirect(301,'gate');
+    }
+});
+
+app.get('/download', tokenIsValid, async (request, response) => {
+    // If token is still valid
+    if (request.tokenIsValid) {
+        if (!request.body.downloadInformation) {
+            const sequelizeInstance = require('./lib/sqlConnection');
+            const models = require('friendgroupmodels').models(sequelizeInstance);
+            const userModel = models['user'];
+            const tagModel = models['tag'];
+            const postModel = models['post'];
+            const fellowshipModel = models['fellowship'];
+            const data = { email: request.email };
+            data.fileInfo = await dbOperations.downloadData({ data, models: { userModel, tagModel, postModel, fellowshipModel } });
+            console.log("well?");
+            console.log(data);
+            response.render('download', { data });
+        }
+        else {
+            response.redirect(301,'/download');
+        }
+    }
+});
+
+app.post('/download', tokenIsValid, async (request, response) => {
+    // If token is still valid
+    if (request.tokenIsValid) {
+        if (!request.body.downloadInformation) {
+            const sequelizeInstance = require('./lib/sqlConnection');
+            const models = require('friendgroupmodels').models(sequelizeInstance);
+            const userModel = models['user'];
+            const tagModel = models['tag'];
+            const postModel = models['post'];
+            const fellowshipModel = models['fellowship'];
+            const data = { email: request.email };
+            data.fileInfo = await dbOperations.downloadData({ data, models: { userModel, tagModel, postModel, fellowshipModel } });
+            response.render('download', { data });
+        }
+        else {
+            response.redirect(301,'/download');
+        }
     }
 });
 

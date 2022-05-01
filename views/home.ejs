@@ -59,6 +59,9 @@
     <form action="/publicusersearch" method="POST">
         <button name="userSearchSubmit" class="navitem" type="submit">Search for Public Users</button>
     </form>
+    <form action="/logout" method="GET">
+        <button name="logout" class="navitem" type="submit">Log Out</button>
+    </form>
     <div class="userPostingSection">
         <form action="/home" method="POST">
             <label class="postUsername" for="writeContent" text='<%= data.username %>'><%= data.username %></label><br>

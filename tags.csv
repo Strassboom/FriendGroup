@@ -1,0 +1,12 @@
+(1,'Me',NOW(),NOW()),(
+2,'Personal',NOW(),NOW()),(
+3,'Friends',NOW(),NOW()),(
+4,'Medical',NOW(),NOW()),(
+5,'Fitness',NOW(),NOW()),(
+6,'Educational',NOW(),NOW()),(
+7,'Recreational',NOW(),NOW()),(
+8,'Work',NOW(),NOW()),(
+9,'Gaming',NOW(),NOW()),(
+10,'Film',NOW(),NOW()),(
+11,'Recovery',NOW(),NOW()),(
+12,'Public',NOW(),NOW())

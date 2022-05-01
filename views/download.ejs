@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+ 
+<head>
+    <title>Download Your Data</title>
+     
+    <style type="text/css" media="screen">
+        body {
+            background-color: skyblue;
+            text-decoration-color: white;
+            font-size:7em;
+        }
+        .externalLabel {
+            font-size: 24px;
+        }
+        .tags {
+            position: relative;
+            font-size: 15px;
+            margin: 0;
+            line-height: 100%;
+        }
+    </style>
+</head>
+ 
+<body>
+    <form action="/home" method="GET">
+        <button name="Return to Home" type="submit">Return to Home</button>
+    </form>
+    <form method="POST">
+        <button id="downloadButton" name="Return to Home" type="submit">CLICK HERE TO DOWNLOAD YOUR DATA</button>
+    </form>
+</body>
+<script>
+    function download() {
+        fileName= '<%= data.fileInfo.fileName %>';
+        var a = document.createElement("a");
+        a.href = fileName;
+        a.download = fileName;
+        a.click();
+    }
+    var b = document.getElementById("downloadButton");
+    b.addEventListener('click', download);
+</script>
+</html>   
