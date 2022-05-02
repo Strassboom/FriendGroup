@@ -214,3 +214,10 @@ TABLESPACE pg_default;
 
 ALTER TABLE public.users
     OWNER to postgres;
+
+---------------------------------------------------------
+
+Running the code:
+
+Run the command "node app.js"
+Open your browser and type "localhost:8080" into the address abr and hit enter
